@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const bcrypt = require("bcryptjs");
 const userSchema = mongoose.Schema({
   email: {
     type: String,
@@ -22,4 +22,19 @@ const userSchema = mongoose.Schema({
     maxLength: 50,
   },
 });
+userSchema.pre("save", async function (next) {
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+userSchema.methods.createJWT = function () {
+  return jwt.sign(
+    { username: user.name, userID: user._id },
+    process.env.ACCESS_TOKEN,
+    { expiresIn: "30d" }
+  );
+};
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return (math = bcrypt.compare(candidatePassword, this.password));
+};
 module.exports = mongoose.model("User", userSchema);
